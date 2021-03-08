@@ -23,16 +23,14 @@ import org.apache.commons.cli.ParseException;
 
 import com.laratecsys.neogrid.entities.AssemblyLine;
 import com.laratecsys.neogrid.entities.ProductionProcess;
+import com.laratecsys.neogrid.utils.CheckHour;
 import com.laratecsys.neogrid.utils.ExtractMinute;
 
-public class App {
+public class App extends CheckHour{
 	public static void main(String[] args) throws FileNotFoundException, IOException {
-
+		Integer i = 1;
 		final Options options = createOptions();
 		final CommandLine line = getCommandLine(options, args);
-		final List<AssemblyLine> assemblyLines = new ArrayList<AssemblyLine>();
-		final AssemblyLine assemblyLine1 = new AssemblyLine(1);
-		final AssemblyLine assemblyLine2 = new AssemblyLine(2);
 		Date initTime = new Date();
 		initTime.setHours(9);
 		initTime.setMinutes(0);
@@ -45,26 +43,47 @@ public class App {
 
 		final BufferedReader stream = new BufferedReader(new FileReader(file));
 
-		List<ProductionProcess> assemblyActivities = new ArrayList<ProductionProcess>();
+		System.out.printf("Linha de montagem %d: \n", i);
 		for (String fileLine = stream.readLine(); fileLine != null; fileLine = stream.readLine()) {
 
 			ProductionProcess assemblyActivitie = new ProductionProcess();
-
+			GregorianCalendar nextTime = new GregorianCalendar();
+			nextTime.setTime(nextActivity.getTime());
+			nextTime.add(Calendar.MINUTE, ExtractMinute.minute(fileLine));
+			
+			if (isLaunchTime(nextTime.getTime())) {
+				Date almoco = new Date();
+                almoco.setHours(13);
+                almoco.setMinutes(0);
+				nextActivity.setTime(almoco);
+				System.out.println("12:00 Horário de Almoço");
+			}
+			
+			if(isLaborTime(nextActivity.getTime()) && ExtractMinute.minute(fileLine) >=30) {
+				System.out.println(formatPrintHour.format(nextActivity.getTime()) +" Ginástica Laboral\n");
+				initTime.setHours(9);
+				initTime.setMinutes(0);
+				nextActivity.setTime(initTime);
+				i++;
+				
+				System.out.printf("Linha de montagem %d: \n", i);
+			}
 			assemblyActivitie.setActivityTime(nextActivity.getTime());
 			assemblyActivitie.setActivityTitle(fileLine);
 
-			assemblyActivities.add(assemblyActivitie);
-
 			nextActivity.setTime(assemblyActivitie.getActivityTime());
+			
 			nextActivity.add(Calendar.MINUTE, ExtractMinute.minute(fileLine));
-			System.out.println(formatPrintHour.format(assemblyActivitie.getActivityTime()) + " "
-					+ assemblyActivitie.getActivityTitle());
+			
+			System.out.println(formatPrintHour.format(assemblyActivitie.getActivityTime()) + " " + assemblyActivitie.getActivityTitle());
 		}
-		assemblyLine1.setAssemblyActivities(assemblyActivities);
+		
+		System.out.println(formatPrintHour.format(nextActivity.getTime()) +" Ginástica Laboral\n");
 
 		stream.close();
 
 	}
+	
 
 	private static CommandLine getCommandLine(final Options options, final String[] args) {
 		@SuppressWarnings("deprecation")
