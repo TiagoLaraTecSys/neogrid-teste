@@ -77,9 +77,9 @@ public class App extends CheckHour{
 			
 			System.out.println(formatPrintHour.format(assemblyActivitie.getActivityTime()) + " " + assemblyActivitie.getActivityTitle());
 		}
-		
-		System.out.println(formatPrintHour.format(nextActivity.getTime()) +" Ginástica Laboral\n");
-
+			if(!isLaborTime(nextActivity.getTime())) {
+				System.out.println(formatPrintHour.format(nextActivity.getTime()) +" Ginástica Laboral\n");
+			}
 		stream.close();
 
 	}
